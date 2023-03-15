@@ -1,5 +1,6 @@
 class sprite{
-  
+   
+  public boolean show = true;
   
   protected PVector position;
   protected float HitboxRadius;
@@ -33,7 +34,7 @@ class sprite{
   }
   public float getHitbox(){return this.HitboxRadius;}
   
-  public PVector getPosition(){return this.position;}
+  public PVector getPosition(){return new PVector(position.x,position.y);}
   
    
   public boolean collide(sprite other){

@@ -19,6 +19,7 @@ class Scene{
 class SceneHandler{
   private HashMap<String,Scene> scenes = new HashMap<String,Scene>();
   Scene currentScene = null;
+  String currentSceneName = new String();
   
   public void addScene(Scene nw,String name){
     this.scenes.put(name, nw);
@@ -32,6 +33,7 @@ class SceneHandler{
   }
   
   public void changeScene(String name){
+    this.currentSceneName = name;
     this.currentScene = scenes.get(name);
     this.currentScene.onChange();
   }

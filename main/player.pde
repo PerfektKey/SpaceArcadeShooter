@@ -13,13 +13,8 @@ class player extends sprite{
     this.mulForce = 0.05;
   }
   
-  
   public void move(){//forcee zu scnell und schlect
   
-  //println("force x: ",this.force.x);
-  //println("force y: ",this.force.y);
-    
-    
     double dt = 1/frameRate;
     
     if (!keyPressed){
@@ -30,9 +25,9 @@ class player extends sprite{
         this.force.x += (this.minForce*tmp);
         
       if (this.position.y >= height*.7)
-        this.force.y += (this.minForce*tmp);
-      if (this.position.y+this.img.height/2 <= height)
         this.force.y -= (this.minForce*tmp);
+      if (this.position.y+this.img.height/2 <= height)
+        this.force.y += (this.minForce*tmp);
         
         
       if (this.force.x != 0){
@@ -49,7 +44,8 @@ class player extends sprite{
       }
       return;
     }
-    
+    if (!keyPressed)
+      return;
     if (key == 'D' || key == 'd'){
       if (this.position.x+this.img.width/2 >= width) return;
       this.position.x += speed * dt;
