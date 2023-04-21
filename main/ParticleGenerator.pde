@@ -66,6 +66,7 @@ class particle{
       dtDelay = 0;
     }*/
     //Color += ColorChange;//arbeite daran
+    noStroke();
     rectMode(CENTER);
     fill(Color);
     rect(position.x,position.y,size.x,size.y);
@@ -119,10 +120,15 @@ class particleGenerator{
     gen = true;
   }
   
+  public void setPosition(PVector p){
+    position.x = p.x;
+    position.y = p.y;
+  }
+  
   public void update(float dt){
     for (int i = 0;i < parts.size();i++){
       if (parts.get(i).alive() == false){
-        println("remove:",parts.get(i));
+        //println("remove:",parts.get(i));
         parts.remove(i);
         continue;
       }
@@ -133,7 +139,7 @@ class particleGenerator{
     time -= dt;
     if (time > 0)
       return;
-    println("inside");
+    //println("inside");
     time = timeDiff;
     // Using "right shift" as a faster technique than red(), green(), and blue()
     int a = (pColor >> 24) & 0xFF;
@@ -141,6 +147,6 @@ class particleGenerator{
     int g = (pColor >> 8) & 0xFF;   // Faster way of getting green(argb)
     int b = pColor & 0xFF;          // Faster way of getting blue(argb)
     for (int i = 0;i < genAmm;i++)
-      parts.add(new particle(plifeTime,pColor,new PVector(position.x,position.y),new PVector(psize.x,psize.y),new PVector(pdirection.x + random(Minstray.x,Maxstray.x),pdirection.y + random(Minstray.y,Maxstray.y)) ,pspeed,new PVector(psizeChange.x,psizeChange.y), pColorChange) );
+      parts.add(new particle(plifeTime+random(-.1,.1),pColor,new PVector(position.x,position.y),new PVector(psize.x,psize.y),new PVector(pdirection.x + random(Minstray.x,Maxstray.x),pdirection.y + random(Minstray.y,Maxstray.y)) ,pspeed,new PVector(psizeChange.x,psizeChange.y), pColorChange) );
   }
 }

@@ -1,7 +1,7 @@
 class shoot extends sprite{
 
-  shoot(PVector __position, float __speed, String path){
-    super(__position, __speed, path);
+  shoot(PVector __position, float __speed){
+    super(__position, __speed, "../assets/bullet.png");
   }
   
   @Override
@@ -22,7 +22,7 @@ class shoot extends sprite{
     position.y -= speed * dt;
     if (position.y > img.height+height)
       position.y = -img.height;
-    if (position.y < -img.height)
+    if (position.y <= -img.height)
       show = false;
   }
 }

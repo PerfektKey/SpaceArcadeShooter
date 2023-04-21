@@ -21,10 +21,18 @@ void setup(){
   
   Scene test = new Scene(){
     particleGenerator pg = new particleGenerator(new PVector(width/2,height/2),1,0,3,color(255,0,0,200),color(225,225,225,255),new PVector(10,10),new PVector(0,0),new PVector(0,-1.5),new PVector(25,25),new PVector(-1,0),new PVector(1,0));
+    Ufo u = new Ufo(new PVector(0,0),220);
+    player pl = new player(new PVector(width/2,height/2),200,"../assets/schiff.png");
     @Override
     public void run(){
       float dt = 1/frameRate;
-      pg.update(dt);
+      
+      pl.update();
+      //u.update();
+      //u.show = true;
+      //u.show();
+      //pg.update(dt);
+      
     }
   };
   
@@ -79,7 +87,7 @@ void setup(){
       as.clear();
       bullets.clear();
       for (int i = 0;i < 10;i++){
-        bullets.add(new shoot(new PVector(0,2*height), 250,"../assets/bullet.png" ));
+        bullets.add(new shoot(new PVector(0,2*height), 250 ));
       }
       for (int i = 0;i < 10;i++){
         as.add(new Astroide(new PVector(0,20+height), 150, "../assets/asteroid.png"));
@@ -127,7 +135,7 @@ void setup(){
         diff.x = 0;
         diff.y = 0;
         for (shoot bullet : bullets){
-          //bullet.update();
+          bullet.update();
           if (bullet.show == true && a.collide(bullet)){
             //println("hit from:",bullet," to:",a);
             a.reset();

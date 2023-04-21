@@ -16,7 +16,7 @@ class sprite{
     
     
     if (this.img == null){
-      println("path of %s is invalid ",this);
+      println("path %s of %s is invalid ",path ,this);
       exit();
     }
        

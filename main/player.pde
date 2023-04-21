@@ -3,7 +3,10 @@ class player extends sprite{
   public PVector force;
   private float maxForce;
   private float minForce;
-  private float mulForce;  
+  private float mulForce;
+  
+  private particleGenerator leftThruster;
+  private particleGenerator rightThruster;
   
   public player(PVector __position, float __speed, String path){
     super(__position, __speed, path);
@@ -11,10 +14,14 @@ class player extends sprite{
     this.maxForce = 30;
     this.minForce = 11.5;
     this.mulForce = 0.05;
+    this.force = new PVector(0,0);
+    PVector pl = new PVector(width/2,height/2);//new PVector(position.x-img.width/2,position.y-img.height/2);
+    leftThruster = new particleGenerator(pl, 3, .01, .7 ,color(#6208C4),color(100,100,100), new PVector(3,3),new PVector(1,1),new PVector(0,10),new PVector(10,10), new PVector(-2.5,0),new PVector(3,0));
+    rightThruster = new particleGenerator(new PVector(0,0), 3, .01, .7 ,color(#6208C4),color(100,100,100), new PVector(3,3),new PVector(1,1),new PVector(0,10),new PVector(10,10), new PVector(-2.5,0),new PVector(3,0));
   }
   
   public void move(){//forcee zu scnell und schlect
-  
+    
     double dt = 1/frameRate;
     
     if (!keyPressed){
@@ -87,8 +94,16 @@ class player extends sprite{
   
   @Override
   public void update(){
+    float dt = 1/frameRate;
     move();
     drawHitbox();
     show();
+    
+    //update the Thrusters
+    leftThruster.setPosition(new PVector(position.x-img.width/4+3.5,position.y+img.height/4));
+    rightThruster.setPosition(new PVector(position.x+img.width/4-3.5,position.y+img.height/4));
+    rightThruster.update(dt);
+    leftThruster.update(dt);
+    
   }
 }
