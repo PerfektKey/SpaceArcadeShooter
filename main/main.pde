@@ -1,174 +1,116 @@
+//imports
 import java.util.Map;
 
-PImage bg;
-player p;
+//variables
 
-SceneHandler main;
+//enum for the current game state
+//holds the current game state
+//===============================
+//all astroid related variables
+ArrayList<Asteroid> astroids;
+int numAstroids = 5;
+//===============================
 
-long HighScore = 0;
+PImage Background;
+PImage emptyBox;
+Player pl;
+
+//=====================
+//all game related variables
+final int maxLives = 3;
+int lives = 3;
+//score related
+int score;// the final score
+int timeIn;// the time the game started in millis()
+int extraScore;// extra scores like shooting a asteroid
+//=====================
+
+/*
+IMPORTANT:
+*****
+you might need to click the window once before key input will be accepted
+*****
+*/
 
 void setup(){
   size(500,750);
-  bg = loadImage("../assets/background.png");
-  p = new player(new PVector(width/2,height*.7), 150, "../assets/schiff.png");
-  JSONObject save = new JSONObject();
-  if (loadJSONObject("data/gameData.json") != null){
-    save = loadJSONObject("data/gameData.json");
-    HighScore = save.getLong("HS");
-  }
+  Background = loadImage("../assets/background.png");
+  emptyBox = loadImage("../assets/bar2.png");
   
-  main = new SceneHandler();
-  
-  Scene test = new Scene(){
-    particleGenerator pg = new particleGenerator(new PVector(width/2,height/2),1,0,3,color(255,0,0,200),color(225,225,225,255),new PVector(10,10),new PVector(0,0),new PVector(0,-1.5),new PVector(25,25),new PVector(-1,0),new PVector(1,0));
-    Ufo u = new Ufo(new PVector(0,0),220);
-    player pl = new player(new PVector(width/2,height/2),200,"../assets/schiff.png");
-    @Override
-    public void run(){
-      float dt = 1/frameRate;
-      
-      pl.update();
-      //u.update();
-      //u.show = true;
-      //u.show();
-      //pg.update(dt);
-      
-    }
-  };
-  
-  Scene menu = new Scene(){
-    float i = 0;
-    @Override
-    public void onChange(){
-      JSONObject save = new JSONObject();
-      save.setLong("HS",HighScore);
-      saveJSONObject(save, "data/gameData.json");
-    }
-    
-    @Override
-    public void run(){
-      pushMatrix();
-      textAlign(CENTER);
-      textSize(40);
-      text("High score:"+HighScore,width/2,60);
-      stroke(#FF4603);
-      //rotate(radians(sin(i)%180));
-      translate(width/2,height/2);
-      rotate(radians(sin(i)%360));
-      i+= .25;
-      text("press ENTER to start",0,0);
-      if (keyPressed && key == ENTER)
-        main.changeScene("game");
-      stroke(255);
-      popMatrix();
-    }
-  };
-  Scene game = new Scene(){
-    player pl = new player(new PVector(width/2,height*.7), 200, "../assets/schiff.png");;
-    ArrayList<Astroide> as = new ArrayList<Astroide>();
-    ArrayList<shoot> bullets = new ArrayList<shoot>();
-    int shootIndex = 0;
-    boolean canShoot = true;
-    int lifes = 3;
-    PImage heart = loadImage("../assets/heart.png");
-    long score = 0;
-    long timeIn = 0;
-    long gameStart = 0;
-    particleGenerator leftThrust = new particleGenerator(new PVector(width/2,height/2),1,0,3,color(255,0,0,200),color(225,225,225,255),new PVector(10,10),new PVector(0,0),new PVector(0,-1.5),new PVector(25,25),new PVector(-1,0),new PVector(1,0));
-    //int w = heart.width;
-    //heart.resize(10,10);
-    
-    @Override
-    public void onChange(){
-      lifes = 3;
-      gameStart = millis();
-      score = millis() - gameStart;
-      timeIn = millis() - gameStart;
-      as.clear();
-      bullets.clear();
-      for (int i = 0;i < 10;i++){
-        bullets.add(new shoot(new PVector(0,2*height), 250 ));
-      }
-      for (int i = 0;i < 10;i++){
-        as.add(new Astroide(new PVector(0,20+height), 150, "../assets/asteroid.png"));
-      }
-      for (Astroide ass : as){
-        ass.setOthers(as);
-        ass.reset();
-        
-      }
-        
-    }
-    
-    @Override
-    public void run(){
-      if (lifes <= 0){
-        if (score > HighScore)
-          HighScore = score;
-        main.changeScene("menu");        
-      }
-      timeIn += millis() - timeIn;
-      long tmp = score + timeIn/10;
-      textSize(32);
-      textAlign(CENTER);
-      text(str(tmp),width/2,40);
-      pl.update();
-      PVector diff = new PVector();
-      int sizeFact = 2;
-      for (int i = 1;i <= lifes;i++)
-        image(heart,heart.width*sizeFact*i,heart.height*sizeFact,heart.width*sizeFact,heart.height*sizeFact);
-        
-      
-      if (keyPressed && key == ' ' && canShoot){
-        bullets.get(shootIndex).spawn(pl.getPosition());
-        canShoot = false;
-        shootIndex++;
-        if (shootIndex >= bullets.size())
-          shootIndex = 0;
-      }
-      if (!keyPressed)
-        canShoot = true;
-      for (shoot bullet : bullets)
-        bullet.update();
-      for (Astroide a : as){
-        a.update();
-        diff.x = 0;
-        diff.y = 0;
-        for (shoot bullet : bullets){
-          bullet.update();
-          if (bullet.show == true && a.collide(bullet)){
-            //println("hit from:",bullet," to:",a);
-            a.reset();
-            bullet.show = false;
-            score += max(100,100 * timeIn/1000);
-          }
-        }
-            
-        if (pl.collide(a)){
-          //println("collide with: ", a);
-          lifes--;
-          diff.x = pl.getPosition().x - a.getPosition().x;
-          diff.y = pl.getPosition().y - a.getPosition().y;  
-          pl.force.x += diff.x;
-          pl.force.y += diff.y;
-          a.reset();
-          
-          break;
-        }
-      }
-    }
-    
-  };
-  //game.add(p);
-  main.addScene(test,"test");
-  main.addScene(game,"game");
-  main.addScene(menu,"menu");
-  main.changeScene("test");
+  pl = new Player(new PVector(250,550) );
+  astroids = new ArrayList<Asteroid>();
+  timeIn = millis();
 }
 
 void draw(){
-  background(bg);
+  background(Background);
+  float dt = 1/frameRate;
+  pl.update(dt);
+  asteroidHandling(dt);
+  CollisionHandler();
   
-  //if (main.currentSceneName == "game" && main.currentScene.lifes == 0)
-  main.run();
+  //draw all of the shots availbale
+  int y = 40;//temporary y variable for the box
+  int x = 25;//temporary x variable for the box
+  for (int i = 0;i < maxLives;i++){
+    image(emptyBox,x ,y);
+    //draw the rect if that bullet is not in use
+    rectMode(CENTER);
+    fill(#FF0000);//full on red
+    if (i >= maxLives-lives)
+      rect(x,y, 15, 15);
+    //incrise the position
+    x += 25;
+    if ((i+1) % 10 == 0){
+      y += 30;
+      x = 25;
+    }
+  }
+      //print/display rounded framerate
+  textSize(32);
+  fill(#FFFFFF);
+  text(str(round(frameRate)), 25, 25);
+  score = (millis()-timeIn) + extraScore;
+  text(str(score), width/2, 50);
+}
+
+void keyPressed(){
+  pl.keyHandler(key, true);
+}
+void keyReleased(){
+  pl.keyHandler(key, false);
+}
+
+//function for handling all of the asteroids
+void asteroidHandling(float dt){
+  //idk do this comment later
+  for (int i = 0;i < numAstroids;i++){//if we use a foreach for loop adding and removing would break the iterator
+    if (numAstroids > astroids.size())//add more asteroids until we have {numAstroids}
+      astroids.add( new Asteroid(new PVector(-10,-10),300, new PVector(0,1), true ) );
+    else if (numAstroids < astroids.size())//remove if we have too many astroids
+      astroids.remove(astroids.size()-1);//remove the last
+    //update the astroid finally
+    astroids.get(i).update(dt);
+    //check if it is inside the window
+    if (astroids.get(i).outOfBounds())
+      astroids.get(i).reset(false);//reset if outside of bounds
+    
+  }
+}
+
+//Handels all of the collisions
+void CollisionHandler(){
+  //handel collission between asteroid and eveything else
+  for (Asteroid a : astroids){
+    if (pl.collide(a)){
+      a.reset(true);//
+      lives--;
+      //TODO: player will be fling back
+    }
+    if (pl.BulletCollide(a)){//collision between astroid and players bullet
+      a.reset(true);
+      //idk what else this should do?
+      //create black hole?
+    }
+  }
 }

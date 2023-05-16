@@ -42,10 +42,13 @@ class sprite{
     return a < (other.getHitbox()+this.HitboxRadius)/2;
   }
   
-  public void update(){}
+  public void update(float dt){}
   
   public void show(){
     imageMode(CENTER);
     image(img, this.position.x, this.position.y);
   }
+  
+  //setter and getter
+  public void setPosition(PVector p){this.position.x = p.x;this.position.y = p.y;}
 }

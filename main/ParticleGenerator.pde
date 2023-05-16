@@ -42,6 +42,9 @@ class particle{
     //size.add(new PVector(size.x * dt,size.y * dt));
     size.x += sizeChange.x * dt;
     size.y += sizeChange.y * dt;
+    if (size.x < 0 || size.y < 0){
+      size.x = 0;size.y = 0;
+    }
     //position.add(new PVector(direction.x * speed.x,direction.y * speed.y) );
     position.x += (direction.x * speed.x) * dt;
     position.y += (direction.y * speed.y) * dt;
@@ -86,8 +89,8 @@ class particleGenerator{
   public ArrayList<particle> parts;
   
   //variables for particles
-  public PVector Maxstray;
-  public PVector Minstray;
+  public float maxRotation;
+  public float minRotation;
   private PVector psizeChange;
   private color pColorChange;
   private PVector pdirection;
@@ -96,7 +99,7 @@ class particleGenerator{
   private color pColor;
   private float plifeTime;
   
-  public particleGenerator(PVector position,int genAmm,float timeDiff,float plifeTime,color pColor,color pColorChange, PVector psize,PVector psizeChange,PVector pdirection,PVector pspeed,PVector Minstray,PVector Maxstray){
+  public particleGenerator(PVector position,int genAmm,float timeDiff,float plifeTime,color pColor,color pColorChange, PVector psize,PVector psizeChange,PVector pdirection,PVector pspeed,float minR, float maxR){
     //variables for the generator
     this.position = position;
     this.genAmm = genAmm;
@@ -112,8 +115,8 @@ class particleGenerator{
     this.psizeChange = psizeChange;
     this.pdirection = pdirection;
     this.pspeed = pspeed;
-    this.Maxstray = Maxstray;
-    this.Minstray = Minstray;
+    this.maxRotation = maxR;
+    this.minRotation = minR;
     
     parts = new ArrayList<particle>();
     
@@ -123,6 +126,9 @@ class particleGenerator{
   public void setPosition(PVector p){
     position.x = p.x;
     position.y = p.y;
+  }
+  public void setGenerating(boolean b){
+    gen = b;
   }
   
   public void update(float dt){
@@ -146,7 +152,7 @@ class particleGenerator{
     int r = (pColor >> 16) & 0xFF;  // Faster way of getting red(argb)
     int g = (pColor >> 8) & 0xFF;   // Faster way of getting green(argb)
     int b = pColor & 0xFF;          // Faster way of getting blue(argb)
-    for (int i = 0;i < genAmm;i++)
-      parts.add(new particle(plifeTime+random(-.1,.1),pColor,new PVector(position.x,position.y),new PVector(psize.x,psize.y),new PVector(pdirection.x + random(Minstray.x,Maxstray.x),pdirection.y + random(Minstray.y,Maxstray.y)) ,pspeed,new PVector(psizeChange.x,psizeChange.y), pColorChange) );
+    for (int i = 0;i < genAmm;i++)// pdirection
+      parts.add(new particle(plifeTime+random(-.1,.1),pColor,new PVector(position.x,position.y),new PVector(psize.x,psize.y),pdirection.copy().rotate(random(minRotation, maxRotation)) ,pspeed,new PVector(psizeChange.x,psizeChange.y), pColorChange) );
   }
 }
