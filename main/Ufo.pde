@@ -1,58 +1,95 @@
 class Ufo extends sprite{
   
-  int direction = 1;//
-  float shootIntervaleBase = 1;//the time in seconds for shooting
-  float shootIntervale = 1;//the current time until next shot
-  int BulletIndex = 0;//the current index of the current bullet in the "bullets" array
-  int maxBullets = 20;//the maximum amount of bullets
+  private PVector direction;//the direction it flies in
   
-  ArrayList<shoot> bullets;
+  //all variables reladet to shooting
+  private ArrayList<Bullet> Bullets;
+  private int bulletAmmount = 10;
+  private int bulletIndex = 0;
+  private float baseShootIntervial = 1; //how much to wait between shots
+  private float ShootIntervial;
+  //=================================
   
-  public Ufo(PVector __position, float __speed){
-    super(__position, __speed, "../assets/u1.png");
-    
-    direction = round(random(-1,1));
-    direction = 1;
-    bullets = new ArrayList<shoot>();
-    
-    for (int i = 0;i < maxBullets;i++){//init array
-      bullets.add(new shoot(new PVector(-10,2*height), -200));
-      bullets.get(i).show = false;
-    }
+  Ufo(PVector position, float speed, boolean process){
+    super(position, speed, "../assets/ufo.png", process);
+    this.direction = new PVector(1,0);
+    Bullets = new ArrayList<Bullet>();
   }
   
-  @Override
-  public void update(){
-    if (!show)
+  public void update(float dt){
+    if (!process)
       return;
-    float dt = 1/frameRate;//the delta time
+    move(dt);
+    bulletHandler(dt);
+    show();
+  }
+  
+  private void move(float dt){
     
-    //move left/right
-    position.x += speed * direction * dt;//move
-    if ( position.x >= width || position.x <= 0 ){//go other way
-      direction *= -1;
-      position.y += img.height;
-      shootIntervale = shootIntervaleBase;//reset shoot timer otherwise two bullets will be in one shot
+    //set the direction
+    //if on the end of screen
+    if ((position.x > width-5*img.width/2 && direction.x > 0)|| (position.x < 5*img.width/2 && direction.x < 0)){
+      direction.y = direction.y * (1+dt) + 0.01;//so we go down
+    }else{
+      direction.y = 0;
     }
-    shootIntervale -= dt;//remove time till we shoot
-    if (shootIntervale <= 0){//shot if time up
-      if ((maxBullets-2)*shootIntervaleBase > (height-getPosition().y)/speed )//should we shoot faster?
-        shootIntervaleBase -= shootIntervaleBase * .2;
-      shootIntervale = shootIntervaleBase;
-      bullets.get(BulletIndex).spawn(new PVector(getPosition().x, getPosition().y));
-      BulletIndex++;
-      if (BulletIndex >= maxBullets)
-        BulletIndex = 0;
+    if (position.x > width-img.width/2)
+      direction.x = -abs(direction.x);
+     else if (position.x < img.width/2)
+       direction.x = abs(direction.x);
+    //go down and change direction
+    
+    
+    //go till direction
+    //till outside of screen
+    
+    //update position
+    //first create a new vector with {speed}
+    //multiply {speed} by {direction}
+    //multiply the vector by {dt}
+    this.position.add(new PVector(speed * direction.x,speed * direction.y).mult(dt) );
+  }
+  
+  private void bulletHandler(float dt){
+    ShootIntervial -= dt;//count down
+    
+    for (int i = 0;i < bulletAmmount;i++){
+      if(Bullets.size() < bulletAmmount)
+        Bullets.add( new Bullet(new PVector(-100,0), 250, new PVector(0,1), false) );//add more bullets if we donthave enough
+      if (Bullets.size() > bulletAmmount)
+        Bullets.remove( Bullets.size()-1 );//remove the last bullet if we have too many
+      
+      Bullets.get(i).setProcess( !Bullets.get(i).outOfBounds() );
+      Bullets.get(i).update(dt);
     }
     
-    for (shoot b : bullets){
-      b.update();
+    //shoot new shoot
+    if (ShootIntervial <= 0){
+      //set the bullet up
+      Bullets.get(bulletIndex).setPosition(this.position.copy());
+      //take care
+      bulletIndex++;
+      ShootIntervial = baseShootIntervial;
+      if (bulletIndex >= Bullets.size()){
+        bulletIndex = 0;
+      }
     }
   }
   
-  public void spawn( PVector into ){
-    position.x = into.x;
-    position.y = into.y;
+  public boolean BulletCollide(sprite other){
+    for (Bullet b : Bullets){
+      if (b.collide(other)){
+        b.setPosition(new PVector(-100,0));
+        return true;
+      }
+    }
+    return false;
   }
-
+  
+  public void ResetBullets(){
+    Bullets.clear();//just delete all bullets
+  }
+  
+  
+  //setter and getter
 }

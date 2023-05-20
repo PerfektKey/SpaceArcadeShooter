@@ -1,10 +1,6 @@
 class Asteroid extends sprite{//pretty much just the Bullet class
- PVector direction; // the direction the bullet flies
+  PVector direction; // the direction the bullet flies
   //its between -1 and 1
-  
-  private boolean outOfBounds = false;// if the bullet is outside of the window set this to true
-  
-  private boolean process = true;//wether or not to update this bullet
   
   private float maxSpeed = 500;//astroids get faster, this is the fastest speed
   
@@ -14,7 +10,7 @@ class Asteroid extends sprite{//pretty much just the Bullet class
   
   Asteroid(PVector position, float speed, PVector direction, boolean process){
     //add a bit of randomness to the speed, this looks better
-    super(position, speed + random(-50,50), "../assets/asteroid.png");
+    super(position, speed + random(-50,50), "../assets/asteroid.png", true);
     this.direction = direction;
     this.process = process;
     //limit the direction vector to -1 and 1
@@ -67,11 +63,13 @@ class Asteroid extends sprite{//pretty much just the Bullet class
     
     //incrise speed by dt * 0.5
     //if this incrise is too fast or slow, fine tune it
-    speed += dt * 0.5;
+    if (speed < maxSpeed)
+      speed += dt * 0.5;
   }
   
   public void reset(boolean exp){
     //explode if exp is true
+    process = true;
     if (exp){
       //set the generators position zo the asteroids
       Explosion.setPosition(position.copy());
@@ -86,17 +84,4 @@ class Asteroid extends sprite{//pretty much just the Bullet class
   }
   
   //setter and getter
-  public boolean outOfBounds(){
-    outOfBounds = false;
-    //check if outside of the window
-    //check x 
-    if (position.x < 0 || position.x > width)
-      outOfBounds = true;
-    //check y
-    if (position.y < 0 || position.y > height)
-      outOfBounds = true;
-    return outOfBounds;
-  }
-  public void setProcess(boolean b) {process = b;}
-  public boolean getProcess() {return process;}
 }

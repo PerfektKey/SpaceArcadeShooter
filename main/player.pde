@@ -1,45 +1,42 @@
 class Player extends sprite{
   
-  private HashMap<Character, Boolean> keys = new HashMap<Character, Boolean>(); // boolean map for the pressed keys
-  //maybe thsi should be a const(final)?
+  IS inputSystem;
   
   PImage emptyBox;
+  PImage FullBoxBlue;
+  
+  //
+  int lives = 0;
+  int maxLives = 0;
+  //===============
   
   //all bullet related variables
   private ArrayList<Bullet> bullets;//the array of bullets
   private int bulletIndex = 0;//the index of the next bullet to fire
   private float BaseReloadTime = 1;//the base time for waiting
   private float reloadTime = 0;//the active counter
-  private boolean UseReload = true;//if false no Reload needed
-  private boolean oneShot = true;
-  private boolean shoot = false;
   private int BulletAmmount = 10;
   // =========================
   //all shield related variables
-  private float shieldTime;//the ammount of time the shield can still be used
-  private float maxShieldTime;// the max ammount of time the shield can be used
-  private float ShieldRecovery;//how much shield time it regenerates per second
-  private float shieldRecoveryTimer;//the timer for recovery IDK
-  private boolean UsesShield;
+  private float shieldTime = 8;//the ammount of time the shield can still be used
+  private float maxShieldTime = 12;// the max ammount of time the shield can be used -- has to be a multible of 4 for the energie bar
+  private float ShieldRecovery = 0.5;//how much shield time it regenerates per second
+  private boolean UsesShield = false;
   //==========================
+  //all Missle Related things
+  private HomingMissle missle;
+  //=========================
 
-  Player(PVector position){
-    super(position, 300, "../assets/schiff.png");
-    //movement keys
-    keys.put('w', false);
-    keys.put('a', false);
-    keys.put('s', false);
-    keys.put('d', false);
-    //space key for shooting
-    keys.put(' ', false);
-    //for reloading
-    keys.put('r', false);
-    //for toogling shield use
-    keys.put('f', false);
+  Player(PVector position, IS s){
+    super(position, 300, "../assets/schiff.png", true);
+    
+    inputSystem = s;
     
     //init vars
     emptyBox = loadImage("../assets/bar2.png");
+    FullBoxBlue = loadImage("../assets/FullBoxBlue.png");
     bullets = new ArrayList<Bullet>();
+    missle = new HomingMissle(300, false);
   }
   
   public void update(float dt){
@@ -49,8 +46,11 @@ class Player extends sprite{
       //TODO: show some reloading img or so 
     }
     move(dt);
+    MissleHandler(dt);
     bulletHandler(dt);
     ShieldHandler(dt);
+    DrawShield();
+    drawLives();
     show();
     //draw all of the shots availbale
     int y = 40;//temporary y variable for the box
@@ -71,29 +71,62 @@ class Player extends sprite{
     }
   }
   
- //update the pressed key
-  void keyHandler(char k, boolean b){
-        keys.replace(k, b);
+  private void MissleHandler(float dt){
+    //if (missle == null)
+    //  missle = new HomingMissle(400, false);/**/
+    //missle.setProcess( !missle.needTarget() );
+    missle.update(dt);
   }
   
   private void ShieldHandler(float dt){
+    UsesShield = false;
+    if (inputSystem.ispressed("SHIELD")){
+      UsesShield = true;
+    }
     if (UsesShield)//remove dt from shieldtime if in use
       shieldTime -= dt;
     if (shieldTime < 0)//turn of shield when shield time has run out
       UsesShield = false;
     if (shieldTime < maxShieldTime)//shiedl recovery
-      shieldTime += shieldRecoveryTimer * dt;
-    if (keys.get('f')){
-      UsesShield = !UsesShield;
-    }
+      shieldTime += ShieldRecovery * dt;
   }
   private void DrawShield(){
     //draw the shield energie bar
+    int x = width-emptyBox.width;
+    int y = ceil(height*.8);
+    for (int i = 0;i < min(ceil(maxShieldTime),16);i++){
+      int ratio = round( maxShieldTime/min(ceil(maxShieldTime),16) );//how many energie points 1 box holds
+      if (shieldTime < (i)*ratio)
+        image(emptyBox, x, y);
+      else
+        image(FullBoxBlue, x, y);
+      y -= emptyBox.height+5;
+    }
     
     //draw shield on player
     if (UsesShield){
-      fill(0,0,225,200);
-      circle(HitboxRadius, position.x, position.y);
+      fill(0,0,200,175);
+      circle(position.x, position.y, HitboxRadius);
+    }
+  }
+  
+  private void drawLives(){
+    //draw all of the lives availbale
+    int y = 40;//temporary y variable for the box
+    int x = 25;//temporary x variable for the box
+    for (int i = 0;i < maxLives;i++){
+      image(emptyBox,x ,y);
+      //draw live
+      rectMode(CENTER);
+      fill(#FF0000);//full on red
+      if (i >= maxLives-lives)
+        rect(x,y, 15, 15);
+      //incrise the position
+      x += 25;
+      if ((i+1) % 10 == 0){
+        y += 30;
+        x = 25;
+      }
     }
   }
   
@@ -103,19 +136,17 @@ class Player extends sprite{
     //the new position vector
     PVector velocity = new PVector();
     
-    //println(keys.get('w'));
-    
     if (!keyPressed)
       return;
     
-    if( keys.get('w') && ( position.y+img.height/2 > height*.55))
+    if( inputSystem.ispressed("UP") && ( position.y+img.height/2 > height*.55))
       velocity.y = -(speed * dt);
-    if( keys.get('s') && ( position.y+img.height/2 < height))
+    if( inputSystem.ispressed("DOWN") && ( position.y+img.height/2 < height))
       velocity.y = (speed * dt);
     
-    if (keys.get('a') && position.x-img.width/2 > 0)
+    if (inputSystem.ispressed("LEFT") && position.x-img.width/2 > 0)
       velocity.x = -(speed * dt);
-    if (keys.get('d') && position.x+img.width/2 < width)
+    if (inputSystem.ispressed("RIGHT") && position.x+img.width/2 < width)
       velocity.x = (speed * dt);
     
     position.add(velocity);
@@ -136,20 +167,16 @@ class Player extends sprite{
     }
     
     //reload if key r pressed and we are currently not reloading and we have shoot at the least 1 bullet
-    if (keys.get('r') && reloadTime < 0 && bulletIndex > 0){
+    if (inputSystem.pressed("RELOAD") && reloadTime < 0 && bulletIndex > 0){
       reloadTime = BaseReloadTime;
       bulletIndex = 0;
     }
-    
-    //check if can shoot
-    if (!keys.get(' '))
-      shoot = false;
+
     //check if a new bullet should and can be fired
-    if (keys.get(' ') && reloadTime <= 0 && !shoot){
-      shoot = true;
-      //println("new friend");
+    if (inputSystem.pressed("SHOOT") && reloadTime <= 0){
       //set the bullet up
       bullets.get(bulletIndex).setPosition(this.position);
+      bullets.get(bulletIndex).setProcess(true);
       //bullets.get(bulletIndex).setProcess(true); // pretty sure we dont need this
       //incrise the next bullets index
       bulletIndex++;
@@ -172,7 +199,7 @@ class Player extends sprite{
         //if we hit stop the bullet {b} from processing and return true
         b.setProcess(false);
         //and set it out of bounds
-        b.setPosition(new PVector(-100,0));//probally set this Pvector to a constant
+        b.setPosition(new PVector(-100,-100));//probally set this Pvector to a constant
         return true;
       }
       return false;
@@ -180,4 +207,26 @@ class Player extends sprite{
   
   //setter and getters
   public ArrayList<Bullet> getBullets(){return bullets;}//since this returns a referenze we dont need a setter
+  public boolean UsesShield(){return UsesShield;}
+  public void setMissleTarget(sprite other){missle.setTarget(other);}
+  public boolean missleNeedTarget(){return missle.needTarget();}
+  public void missleFire(){missle.setProcess(true);missle.setPosition(this.position.copy());}
+  
+  public int getNumBullets(){return BulletAmmount;}
+  public void setNumBullets(int i){BulletAmmount = i;}
+  public float getReloadTime(){return BaseReloadTime;}
+  public void setReloadTime(float f){BaseReloadTime = f;}
+  
+  public float getMaxShieldTime(){return maxShieldTime;}
+  public void setMaxShieldTime(float f){maxShieldTime = f;}
+  public float getShieldRecovery(){return ShieldRecovery;}
+  public void setShieldRecovery(float f){ShieldRecovery = f;}
+  
+  public int getLives(){return lives;}
+  public void setLives(int i){lives = i;}
+  public void decriseLive(){lives -= (lives > 0) ? 1 : 0;}
+  public void incriseLive(){lives += (lives < maxLives) ? 1 : 0;}
+  public boolean isDead(){return lives <= 0;}
+  public int getMaxLives(){return maxLives;}
+  public void setMaxLives(int i){maxLives = i;}
 }

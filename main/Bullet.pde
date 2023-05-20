@@ -3,12 +3,8 @@ class Bullet extends sprite{
   PVector direction; // the direction the bullet flies
   //its between -1 and 1
   
-  private boolean outOfBounds = false;// if the bullet is outside of the window set this to true
-  
-  private boolean process = true;//wether or not to update this bullet
-  
   Bullet(PVector position, float speed, PVector direction, boolean process){
-    super(position, speed, "../assets/bullet.png");
+    super(position, speed, "../assets/bullet.png", true);
     this.direction = direction;
     this.process = process;
     //limit the direction vector to -1 and 1
@@ -45,17 +41,5 @@ class Bullet extends sprite{
   }
   
   //setter and getter
-  public boolean outOfBounds(){
-    outOfBounds = false;
-    //check if outside of the window
-    //check x 
-    if (position.x < 0 || position.x > width)
-      outOfBounds = true;
-    //check y
-    if (position.y < 0 || position.y > height)
-      outOfBounds = true;
-    return outOfBounds;
-  }
-  public void setProcess(boolean b) {process = b;}
-  public boolean getProcess() {return process;}
+  
 }

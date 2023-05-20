@@ -1,4 +1,4 @@
-class particle{
+ class particle{
 
   private PVector sizeChange;
   private float[] ColorChange;
@@ -64,8 +64,6 @@ class particle{
       Color |= (Color | cr) << 16;
       Color |= (Color | cg) << 8;
       Color |= (Color | cb);
-      println("change color by",chr,chg,chb,cha);
-      println("Color change to:",cr,cg,cb,ca);
       dtDelay = 0;
     }*/
     //Color += ColorChange;//arbeite daran
@@ -99,7 +97,7 @@ class particleGenerator{
   private color pColor;
   private float plifeTime;
   
-  public particleGenerator(PVector position,int genAmm,float timeDiff,float plifeTime,color pColor,color pColorChange, PVector psize,PVector psizeChange,PVector pdirection,PVector pspeed,float minR, float maxR){
+  public particleGenerator(PVector position,int genAmm,float timeDiff,float plifeTime,int pColor,int pColorChange, PVector psize,PVector psizeChange,PVector pdirection,PVector pspeed,float minR, float maxR){
     //variables for the generator
     this.position = position;
     this.genAmm = genAmm;
@@ -134,7 +132,6 @@ class particleGenerator{
   public void update(float dt){
     for (int i = 0;i < parts.size();i++){
       if (parts.get(i).alive() == false){
-        //println("remove:",parts.get(i));
         parts.remove(i);
         continue;
       }
@@ -145,7 +142,6 @@ class particleGenerator{
     time -= dt;
     if (time > 0)
       return;
-    //println("inside");
     time = timeDiff;
     // Using "right shift" as a faster technique than red(), green(), and blue()
     int a = (pColor >> 24) & 0xFF;
@@ -155,4 +151,18 @@ class particleGenerator{
     for (int i = 0;i < genAmm;i++)// pdirection
       parts.add(new particle(plifeTime+random(-.1,.1),pColor,new PVector(position.x,position.y),new PVector(psize.x,psize.y),pdirection.copy().rotate(random(minRotation, maxRotation)) ,pspeed,new PVector(psizeChange.x,psizeChange.y), pColorChange) );
   }
+  
+  //const generators
+}
+particleGenerator getExplosionGenerator(float size){
+  return new particleGenerator(
+      new PVector(0,0),
+      50,
+      0.0,
+      size,
+      color(255,23,21), color(255,23,21),
+      new PVector(7,7), new PVector(2,2),
+      new PVector(1,1),
+      new PVector(800,800),
+      0.0, 360.0);
 }
