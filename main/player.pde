@@ -5,6 +5,10 @@ class Player extends sprite{
   PImage emptyBox;
   PImage FullBoxBlue;
   
+  //sound
+  SoundFile shoot;
+  ///SoundFile rocketExplosion;
+  
   //
   int lives = 0;
   int maxLives = 0;
@@ -19,7 +23,7 @@ class Player extends sprite{
   // =========================
   //all shield related variables
   private float shieldTime = 8;//the ammount of time the shield can still be used
-  private float maxShieldTime = 12;// the max ammount of time the shield can be used -- has to be a multible of 4 for the energie bar
+  private float maxShieldTime = 2;// the max ammount of time the shield can be used -- has to be a multible of 4 for the energie bar
   private float ShieldRecovery = 0.5;//how much shield time it regenerates per second
   private boolean UsesShield = false;
   //==========================
@@ -37,6 +41,8 @@ class Player extends sprite{
     FullBoxBlue = loadImage("../assets/FullBoxBlue.png");
     bullets = new ArrayList<Bullet>();
     missle = new HomingMissle(300, false);
+    
+    shoot   = new SoundFile(main.this, "../sound/Shoot.wav");
   }
   
   public void update(float dt){
@@ -159,7 +165,7 @@ class Player extends sprite{
       if (bullets.size() > BulletAmmount)//remove bullets
         bullets.remove(bullets.size()-1);//remove the last added bullet
       if (bullets.size() < BulletAmmount)//add bullets
-        bullets.add(new Bullet(new PVector(-100,-100), 250, new PVector(0,-1), false ));
+        bullets.add(new Bullet(new PVector(-1000,-1000), 250, new PVector(0,-1), false ));
       //set the bullets process to wether or not it is out of bounds
       bullets.get(i).setProcess( !bullets.get(i).outOfBounds() );
       //update the bullet
@@ -174,6 +180,7 @@ class Player extends sprite{
 
     //check if a new bullet should and can be fired
     if (inputSystem.pressed("SHOOT") && reloadTime <= 0){
+      shoot.play();
       //set the bullet up
       bullets.get(bulletIndex).setPosition(this.position);
       bullets.get(bulletIndex).setProcess(true);

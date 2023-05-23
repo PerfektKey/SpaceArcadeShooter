@@ -1,6 +1,9 @@
 class Ufo extends sprite{
   
   private PVector direction;//the direction it flies in
+   
+   
+  SoundFile shoot = new SoundFile(main.this, "../sound/EnemyShoot.wav");
   
   //all variables reladet to shooting
   private ArrayList<Bullet> Bullets;
@@ -14,6 +17,8 @@ class Ufo extends sprite{
     super(position, speed, "../assets/ufo.png", process);
     this.direction = new PVector(1,0);
     Bullets = new ArrayList<Bullet>();
+    
+    //shoot = new SoundFile(main.this, "../sound/EnemyShoot.wav");
   }
   
   public void update(float dt){
@@ -51,6 +56,8 @@ class Ufo extends sprite{
   }
   
   private void bulletHandler(float dt){
+    if (!process)
+      return;
     ShootIntervial -= dt;//count down
     
     for (int i = 0;i < bulletAmmount;i++){
@@ -65,6 +72,9 @@ class Ufo extends sprite{
     
     //shoot new shoot
     if (ShootIntervial <= 0){
+      
+      //shoot.play(); 
+      
       //set the bullet up
       Bullets.get(bulletIndex).setPosition(this.position.copy());
       //take care

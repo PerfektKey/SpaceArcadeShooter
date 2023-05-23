@@ -1,16 +1,14 @@
-# SpaceArcadeShooter
-A Space shooter in (kind of)Arcade style
+GitHub Link: 
 
-
-This is a SpaceShip shooting game i made in my IT class.
-It is completly free for use.
-
-Controlls:
-  ship:
-    W = MOVE UP
-    S = MOVE DOWN
-    A = MOVE LEFT
-    D = MOVE RIGHT
-    SPACE = SHOOT
-  menu:
-    U
+Controls:
+	Menu:
+		w : Navigate UP
+		s : Navigate DOWN
+		ENTER : Select orange text
+	Game:
+		W, A, S, D : Movement
+		SHIFT : activate shield
+		F : Use PickUp
+		SPACE : Shoot
+		m : shoot missle
+		

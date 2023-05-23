@@ -1,5 +1,8 @@
 //imports
 import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+
+import processing.sound.*;
 
 //variables
 
@@ -20,6 +23,11 @@ PImage Background;
 PImage emptyBox;
 Player pl;
 
+SoundFile select;
+SoundFile hurt;
+SoundFile explosion;
+SoundFile powerUp;
+
 
 //===============================
 //all astroid related variables
@@ -29,7 +37,7 @@ int numAstroids = 5;
 ArrayList<PickUp> pickUps;
 ArrayList<PickUp> InUsePickUps;
 PickUp CurrentPickUp;
-float probality = 100;
+HashMap<Float, Class> probality;
 
 //=====================
 //score related
@@ -55,11 +63,12 @@ you might need to click the window once before key input will be accepted
 
 TODO:
 -pickups {finsihed}
--more pickUps
+-more pickUps {finished}
 -missle sometimes goes out of window; change that
 -options
 -how to play
--ufos sometimes die randomly
+-ufos sometimes die randomly {finished}
+-ufos dont spawn
 */
 
 void setup(){
@@ -85,9 +94,18 @@ void setup(){
   input.addAction("MISSLE",Integer.valueOf(int('C')));
   input.addAction("UsePickUp",Integer.valueOf(int('f')));
   input.addAction("UsePickUp",Integer.valueOf(int('F')));
+  input.addAction("UsePickUp",Integer.valueOf(int('x')));
+  input.addAction("UsePickUp",Integer.valueOf(int('X')));
+  input.addAction("UsePickUp",Integer.valueOf(CONTROL));
   
   input.addAction("select",Integer.valueOf(ENTER));
   input.addAction("select",Integer.valueOf(int(' ')));
+  
+  
+  select    = new SoundFile(this, "../sound/Select.wav");
+  hurt      = new SoundFile(this, "../sound/Hurt.wav");
+  explosion = new SoundFile(this, "../sound/Explosion.wav");
+  powerUp   = new SoundFile(this, "../sound/PowerUp.wav");
   
   
   pl = new Player(new PVector(250,550), input);
@@ -96,6 +114,22 @@ void setup(){
   pickUps = new ArrayList<PickUp>();
   timeIn = millis();
   
+  //load the highscore
+  try{
+    JSONObject json = new JSONObject();
+    json = loadJSONObject("../data/saveGame.json");
+    Highscore = json.getInt("HighScore");
+    println(Highscore);
+  }catch(NullPointerException e){e.printStackTrace();}
+}
+
+void SaveHighScore(){
+  JSONObject json = new JSONObject();
+
+  json.setInt("HighScore", Highscore);
+
+  saveJSONObject(json, "../data/saveGame.json");
+
 }
 
 void draw(){
@@ -105,8 +139,13 @@ void draw(){
     Menu();
   
   //controll logic
-  if (pl.isDead())
+  if (pl.isDead()){
     state = GameState.Menu;
+    //update the Highscore
+    if (score > Highscore)
+      Highscore = score;
+    SaveHighScore();
+  }
 }
 
 void keyPressed(){
@@ -121,7 +160,7 @@ void keyReleased(){
 float logoRotation;
 int RotationDirection = 1;
 //
-float HighScoreSize = 0;
+float HighScoreSize = 0;//the Text size
 int inciseDirection = 1;
 //navigation
 int position = 0;//what text we are at
@@ -131,9 +170,6 @@ void Menu(){
   //some temporary variables
   int i = 0;//for position comparing
   background(Background);
-  //update the Highscore
-  if (score > Highscore)
-    Highscore = score;
   
   HandleNavigation();
   
@@ -176,7 +212,8 @@ void HandleNavigation(){
   
   //actual action with it?
   if (!input.pressed("select"))
-    return;    
+    return;
+  select.play();
   if (position == 0){// at text "Start
     startGame();
   }
@@ -285,11 +322,15 @@ void ufoHandling(float dt){
   if (score > spawnThresHold && allDead){
     for (int i = 0;i < numUfos;i++){
       ufos.get(i).ResetBullets();//this makes sure bullets dont just spawn in the middle of the window
-      ufos.get(i).setPosition(new PVector(40*(i+1),10));//I dont know as to why they spawn in different y places
+      ufos.get(i).setPosition(new PVector(40*(i+1),40));//I dont know as to why they spawn in different y places
       ufos.get(i).setProcess(true);
     }
-    numUfos = numUfos * 2;
-    spawnThresHold *= 4;
+    if (numUfos < 8)
+      numUfos = numUfos * 2;
+    if (spawnThresHold < 20000)
+      spawnThresHold *= 2;
+    else
+      spawnThresHold += 20000;
   }
   
   allDead = true;
@@ -305,8 +346,10 @@ void ufoHandling(float dt){
     if (ufos.get(i).getProcess())
       allDead = false;
     //check if it is inside the window
-    if (ufos.get(i).outOfBounds())
-      ufos.get(i).setPosition(new PVector(-100, 0));//reset if outside of bounds
+    if (ufos.get(i).outOfBounds()){
+      ufos.get(i).setPosition(new PVector(-100, width*height));//reset if outside of bounds
+      ufos.get(i).setProcess(false);
+    }
     
     
   }
@@ -341,6 +384,7 @@ void PickUpsHandling(float dt){
   if (input.pressed("UsePickUp") && CurrentPickUp != null){
     InUsePickUps.add(CurrentPickUp);
     CurrentPickUp = null;
+    powerUp.play();
   }
   //Handle the PickUps in use
   for (int i = 0;i < InUsePickUps.size();i++){
@@ -358,6 +402,27 @@ void PickUpsHandling(float dt){
   }
 }
 
+//Adds a new pickup o the list
+void addNewPickUp(PVector pos){
+  float num = random(0, 100);
+  //cant use the "newInstance()" method becouse we would need to compile this for it to work and compiling is not liked by Processing
+  
+  if (num > 70){
+    pickUps.add(new AddShieldTime());
+  }else
+  if (num > 60){
+    pickUps.add(new IncriseMaxHealth());
+  }else
+  if (num > 40){
+    pickUps.add(new FullHealth());
+  }else
+  if (num > 20){
+    pickUps.add(new AddBullet());
+  }
+  if (num > 20) pickUps.get(pickUps.size()-1).setPosition(pos);
+
+}
+
 //Handels all of the collisions
 void CollisionHandler(){
   //handel collission between asteroid and eveything else
@@ -366,13 +431,17 @@ void CollisionHandler(){
       continue;
     if (pl.collide(a)){
       a.reset(true);//
-      if (!pl.UsesShield())
+      explosion.play();
+      if (!pl.UsesShield() && a.getProcess()){
         pl.decriseLive();
+        hurt.play();
+      }
       //TODO: player will be fling back
     }
     if (pl.BulletCollide(a)){//collision between astroid and players bullet
       a.reset(true);
       extraScore += 500;
+      explosion.play();
       //idk what else this should do?
       //create black hole?
     }
@@ -382,23 +451,24 @@ void CollisionHandler(){
     if (pl.collide(u)){
       u.setPosition(new PVector(-100,0));//basicly set its process to false
       u.setProcess(false);
-      if (!pl.UsesShield())//if the player is currently not using a shield
+      explosion.play();
+      if (!pl.UsesShield()){//if the player is currently not using a shield
         pl.decriseLive();
-    }
-    if (pl.BulletCollide(u)){
-      //spawn a package
-      if (random(0, 100) > 100-probality){
-        pickUps.add(new FullHealth());
-        pickUps.get(pickUps.size()-1).setPosition(u.getPosition());
+        hurt.play();
       }
+    }
+    if (pl.BulletCollide(u) && u.getProcess()){
+      //spawn a package
+      addNewPickUp(u.getPosition());
       u.setPosition(new PVector(-100,0));//basicly set its process to false
       u.setProcess(false);
       extraScore += 1000;
     }
     
     if (u.BulletCollide(pl)){
-      if (!pl.UsesShield()){//if the player is currently not using a shield
+      if (!pl.UsesShield() && u.getProcess()){//if the player is currently not using a shield
         pl.decriseLive();
+        hurt.play();
       }
     }
   }

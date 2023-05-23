@@ -22,6 +22,9 @@ class PickUp extends sprite{
   //setter/getter
   public boolean isFinished(){return finished;}
 }
+//*********************************************
+
+//*********************************************
 class FullHealth extends PickUp{
   FullHealth(){
     super(300, "../assets/pickUp1.png", true);
@@ -33,9 +36,12 @@ class FullHealth extends PickUp{
      finished = true;
   }
 }
+//*********************************************
+
+//*********************************************
 class IncriseMaxHealth extends PickUp{
   IncriseMaxHealth(){
-    super(300, "../assets/pickUp12png", true);
+    super(300, "../assets/pickUp2.png", true);
   }
   
   @Override
@@ -44,14 +50,30 @@ class IncriseMaxHealth extends PickUp{
      finished = true;
   }
 }
+//*********************************************
+
+//*********************************************
 class AddBullet extends PickUp{
   AddBullet(){
-    super(300, "../assets/pickUp1.png", true);
+    super(300, "../assets/pickUp3.png", true);
   }
   
   @Override
   public void effect(float dt, Player p){
-     p.setLives( p.getMaxLives() );
+     p.setNumBullets( p.getNumBullets() + 1 );
      finished = true;
   }
 }
+//*********************************************
+class AddShieldTime extends PickUp{
+  AddShieldTime(){
+    super(300, "../assets/pickUp4.png", true);
+  }
+  
+  @Override
+  public void effect(float dt, Player p){
+     p.setMaxShieldTime( p.getMaxShieldTime() + 1 );
+     finished = true;
+  }
+}
+//*********************************************

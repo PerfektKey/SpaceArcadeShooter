@@ -2,6 +2,8 @@ class HomingMissle extends sprite{
   
   private sprite Target;//the target to pursui
   
+  SoundFile exp;
+  
   private particleGenerator explosion;
   final private float baseOnTime = .09;//the ammount of time the particle generator generates
   private float OnTime = 0;
@@ -9,6 +11,8 @@ class HomingMissle extends sprite{
   HomingMissle(float sp, boolean process){
     super(new PVector(-100,0),sp,"../assets/ROCKET.png", process);
     explosion = getExplosionGenerator(0.1);
+    
+    exp = new SoundFile(main.this, "../sound/RocketExplosion.wav");
   }
   
   void update(float dt){
@@ -28,6 +32,7 @@ class HomingMissle extends sprite{
     //check if target hit
     if (collide(Target)){
       //hit!
+      exp.play();
       process = false;
       Target.process = false;
       Target.reset(false);
