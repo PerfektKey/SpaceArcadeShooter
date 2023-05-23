@@ -1,4 +1,4 @@
-GitHub Link: 
+GitHub Link: https://github.com/PerfektKey/SpaceArcadeShooter
 
 Controls:
 	Menu:
